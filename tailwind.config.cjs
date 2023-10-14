@@ -13,6 +13,14 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-inter)", ...fontFamily.sans],
       },
+      backgroundImage: {
+        button: "linear-gradient(180deg, #E4E4E4 0%, #F7F7F7 100%)",
+      },
+      colors: {
+        red: {
+          700: "#BF0E0E",
+        },
+      },
     },
   },
   plugins: [],
