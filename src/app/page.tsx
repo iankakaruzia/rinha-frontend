@@ -1,7 +1,7 @@
 "use client";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
-const BYTES_PER_PAGE = 1024 * 5;
+const BYTES_PER_PAGE = 1024 * 10;
 
 export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,6 +25,7 @@ export default function Home() {
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     event.preventDefault();
+    setFileContent("");
     if (event.target.files?.length) {
       const firstFile = event.target.files[0];
 
@@ -47,51 +48,44 @@ export default function Home() {
   }
 
   function loadNextPage() {
-    setCurrentPage((prevPage) => prevPage + 1);
     if (file) {
       const reader = new FileReader();
       reader.onloadend = (event) => {
-        console.log({ event });
         if (event.target?.result) {
           handleFileRead(event.target.result as string);
         }
-
-        // if (reader.readyState === FileReader.DONE) {
-        //   const start = reader.result?.toString().length || 0;
-        //   const blob = file.slice(start, start + BYTES_PER_PAGE);
-        //   if (blob.size > 0) {
-        //     setIsLoading(true);
-        //     reader.readAsText(blob);
-        //     setCurrentPage((prevPage) => prevPage + 1);
-        //   }
-        // }
       };
       const blob = file.slice(
-        (currentPage - 1) * BYTES_PER_PAGE,
         currentPage * BYTES_PER_PAGE,
+        (currentPage + 1) * BYTES_PER_PAGE,
       );
       setIsLoading(true);
       reader.readAsText(blob);
+      setCurrentPage((prevPage) => prevPage + 1);
+
+      if (blob.size === 0) {
+        setIsLoading(false);
+      }
     }
   }
 
-  // function handleScroll() {
-  //   const scrollTop =
-  //     document.documentElement.scrollTop || document.body.scrollTop;
-  //   const scrollHeight =
-  //     document.documentElement.scrollHeight || document.body.scrollHeight;
-  //   const clientHeight =
-  //     document.documentElement.clientHeight || document.body.clientHeight;
+  function handleScroll() {
+    const scrollTop =
+      document.documentElement.scrollTop || document.body.scrollTop;
+    const scrollHeight =
+      document.documentElement.scrollHeight || document.body.scrollHeight;
+    const clientHeight =
+      document.documentElement.clientHeight || document.body.clientHeight;
 
-  //   if (scrollTop + clientHeight >= scrollHeight - 50 && !isLoading) {
-  //     loadCurrentPage();
-  //   }
-  // }
+    if (scrollTop + clientHeight >= scrollHeight - 50 && !isLoading) {
+      loadNextPage();
+    }
+  }
 
-  // useEffect(() => {
-  //   window.addEventListener("scroll", handleScroll);
-  //   return () => window.removeEventListener("scroll", handleScroll);
-  // }, [isLoading]);
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isLoading, file]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 pt-6 text-center md:px-11">
@@ -110,12 +104,11 @@ export default function Home() {
         ref={inputRef}
         type="file"
         className="hidden"
-        // accept="application/json"
+        accept="application/json"
       />
       {fileContent && (
         <>
           <div>{fileContent}</div>
-          <button onClick={loadNextPage}>Load more</button>
         </>
       )}
 
